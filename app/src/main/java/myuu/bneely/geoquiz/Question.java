@@ -1,6 +1,5 @@
 package myuu.bneely.geoquiz;
-//Brooks Neely
-//CSC200
+
 public class Question {
 
         private int mTextResId; //int is integer//
