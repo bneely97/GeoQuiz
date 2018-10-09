@@ -6,10 +6,15 @@
     <string name="question_africa">The source of the Nile River is in Egypt.</string>
     <string name="question_americas">The Amazon River is the longest river in the Americas.</string>
     <string name="question_asia">Lake Baikal is the world\'s oldest and deepest freshwater lake.</string>
+    <string name="question_Louisiana">New Orleans is the capital of Louisiana.</string>
+    <string name="question_Utah">Utah has over 20 national parks.</string>
+    <string name="question_Canada">Canada is the second largest country in the world.</string>
+    <string name="question_India">New Delhi is the capital of India.</string>
     <string name="true_button">True</string>
     <string name="false_button">False</string>
     <string name="next_button">Next</string>
     <string name="previous_button">Previous</string>
     <string name="correct_toast">Correct!</string>
     <string name="incorrect_toast">Incorrect!</string>
+    <string name="score">Score: String.valueOf(percentscore)%</string>
 </resources>

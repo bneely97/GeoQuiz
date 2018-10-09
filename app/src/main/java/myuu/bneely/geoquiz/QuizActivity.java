@@ -10,15 +10,21 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 public class QuizActivity extends AppCompatActivity {
 
     private static final String MYTAG = "quizactivity";
     private static final String KEY_INDEX = "index";
+    private static final String KEY_ANSWERED = "Answered";
+    private static final String ANSWER_COUNT = "Answer";
+    private static final String BUTTON_STATE = "mButtons";
     private Button mTrueButton; //private not available outside of class; m (member) is global variable//
     private Button mFalseButton;
     private Button mNextButton;
     private Button mPreviousButton;
     private TextView mQuestionTextView;
+    private ArrayList<Integer> mAnsweredQuestions = new ArrayList<>();
     private Question[] mQuestionsBank = new Question[] {
             new Question(R.string.question_tennessee, true),
             new Question(R.string.question_oceans, true),
@@ -26,9 +32,17 @@ public class QuizActivity extends AppCompatActivity {
             new Question(R.string.question_africa, false),
             new Question(R.string.question_americas, true),
             new Question(R.string.question_asia, true),
+            new Question(R.string.question_Louisiana, false),
+            new Question(R.string.question_Utah, true),
+            new Question(R.string.question_Canada, true),
+            new Question(R.string.question_India, true),
     };
 
     private int mCurrentIndex = 0;
+    private int mCorrectAnswers = 0;
+    private int mIncorrectAnswers = 0;
+    private int[] mAnswer = new int[mQuestionsBank.length];
+    private boolean mButtons = true;
 
     @Override
     public void onStart() {
@@ -53,6 +67,9 @@ public class QuizActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstaceState);
         Log.i(MYTAG, "onSaveInstanceState");
         savedInstaceState.putInt(KEY_INDEX, mCurrentIndex);
+        savedInstaceState.putIntegerArrayList(KEY_ANSWERED, mAnsweredQuestions);
+        savedInstaceState.putIntArray(ANSWER_COUNT, mAnswer);
+        savedInstaceState.putBoolean(BUTTON_STATE, mButtons);
     }
 
     @Override
@@ -72,6 +89,9 @@ public class QuizActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
+            mAnsweredQuestions = savedInstanceState.getIntegerArrayList(KEY_ANSWERED);
+            mAnswer = savedInstanceState.getIntArray(ANSWER_COUNT);
+            mButtons = savedInstanceState.getBoolean(BUTTON_STATE);
         }
         Log.d(MYTAG, "onCreate called");
         setContentView(R.layout.activity_quiz);
@@ -86,7 +106,8 @@ public class QuizActivity extends AppCompatActivity {
                 //           toast.setGravity(Gravity.TOP, 0, 0);//
                 //           toast.show();//
                 checkAnswer(true);
-                setButtons(false);
+                disableAnswer();
+                mAnsweredQuestions.add(mCurrentIndex);
             }
         });
         mFalseButton = (Button) findViewById(R.id.false_button);
@@ -97,17 +118,18 @@ public class QuizActivity extends AppCompatActivity {
                 //        toast.setGravity(Gravity.TOP, 0, 0);
                 //        toast.show();
                 checkAnswer(false);
-                setButtons(false);
+                disableAnswer();
+                mAnsweredQuestions.add(mCurrentIndex);
             }
 
         });
+
         mNextButton = (Button) findViewById(R.id.next_button);
         mNextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionsBank.length;
                 updateQuestion();
-                setButtons(true);
             }
         });
         mPreviousButton = (Button) findViewById(R.id.previous_button);
@@ -117,7 +139,6 @@ public class QuizActivity extends AppCompatActivity {
                 if (mCurrentIndex == 0) { mCurrentIndex = mQuestionsBank.length - 1 ;}
                     else { mCurrentIndex = mCurrentIndex - 1; }
                 updateQuestion();
-                setButtons(true);
             }
         });
         updateQuestion();
@@ -125,11 +146,20 @@ public class QuizActivity extends AppCompatActivity {
     private void updateQuestion() {
         int question = mQuestionsBank[mCurrentIndex].getTextResId();
         mQuestionTextView.setText(question);
+        if (mAnswer[mCurrentIndex] != 0)
+            disableAnswer();
+        else
+            enableAnswer();
     }
 
-    private void setButtons(boolean newstate) {
-        mTrueButton.setEnabled(newstate);
-        mFalseButton.setEnabled(newstate);
+    private void disableAnswer() {
+        mTrueButton.setEnabled(false);
+        mFalseButton.setEnabled(false);
+    }
+
+    private void enableAnswer() {
+        mTrueButton.setEnabled(true);
+        mFalseButton.setEnabled(true);
     }
 
     private void checkAnswer(boolean userPressedTrue) {
@@ -139,11 +169,19 @@ public class QuizActivity extends AppCompatActivity {
 
         if (userPressedTrue == answerIsTrue) {
             messageResId = R.string.correct_toast;
+            mCorrectAnswers += 1;
+            mAnswer[mCurrentIndex]=1;
         } else {
             messageResId = R.string.incorrect_toast;
+            mIncorrectAnswers += 1;
+            mAnswer[mCurrentIndex]=-1;
         }
 
-        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
-                .show();
+        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
+        if ((mCorrectAnswers + mIncorrectAnswers) == mQuestionsBank.length) {
+            double percentscore = ((double)mCorrectAnswers/(double)mQuestionsBank.length) * 100;
+            //mQuestionTextView.setText("Score: " + String.valueOf(percentscore) + "%");
+            Toast.makeText(this, getString(R.string.score, percentscore), Toast.LENGTH_LONG).show();
+        }
     }
 }
