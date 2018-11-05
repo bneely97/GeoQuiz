@@ -1,5 +1,7 @@
 package myuu.bneely.geoquiz;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,10 +21,12 @@ public class QuizActivity extends AppCompatActivity {
     private static final String KEY_ANSWERED = "Answered";
     private static final String ANSWER_COUNT = "Answer";
     private static final String BUTTON_STATE = "mButtons";
+    private static final int REQUEST_CODE_CHEAT = 0;
     private Button mTrueButton; //private not available outside of class; m (member) is global variable//
     private Button mFalseButton;
     private Button mNextButton;
     private Button mPreviousButton;
+    private Button mCheatButton;
     private TextView mQuestionTextView;
     private ArrayList<Integer> mAnsweredQuestions = new ArrayList<>();
     private Question[] mQuestionsBank = new Question[] {
@@ -43,6 +47,7 @@ public class QuizActivity extends AppCompatActivity {
     private int mIncorrectAnswers = 0;
     private int[] mAnswer = new int[mQuestionsBank.length];
     private boolean mButtons = true;
+    private boolean mIsCheater;
 
     @Override
     public void onStart() {
@@ -105,11 +110,12 @@ public class QuizActivity extends AppCompatActivity {
                 //           Toast toast = Toast.makeText(QuizActivity.this, R.string.correct_toast, Toast.LENGTH_SHORT);//
                 //           toast.setGravity(Gravity.TOP, 0, 0);//
                 //           toast.show();//
-                checkAnswer(true);
                 disableAnswer();
+                checkAnswer(true);
                 mAnsweredQuestions.add(mCurrentIndex);
             }
         });
+
         mFalseButton = (Button) findViewById(R.id.false_button);
         mFalseButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -132,6 +138,7 @@ public class QuizActivity extends AppCompatActivity {
                 updateQuestion();
             }
         });
+
         mPreviousButton = (Button) findViewById(R.id.previous_button);
         mPreviousButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -141,8 +148,35 @@ public class QuizActivity extends AppCompatActivity {
                 updateQuestion();
             }
         });
+
+        mCheatButton = (Button)findViewById(R.id.cheat_button);
+        mCheatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+     //           Intent intent = new Intent(QuizActivity.this, CheatActivity.class); //misspelling class causes app not to compile
+     //           intent.putExtra("myuu.bneely.geoquiz.answer_is_true", true);
+                boolean answerIsTrue = mQuestionsBank[mCurrentIndex].isAnswerTrue();
+                Intent intent = CheatActivity.newIntent(QuizActivity.this, answerIsTrue);
+                startActivityForResult(intent, REQUEST_CODE_CHEAT);
+            }
+        });
+
         updateQuestion();
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        } if (requestCode == REQUEST_CODE_CHEAT) {
+            if (data==null) {
+                return;
+            }
+            mIsCheater = CheatActivity.wasAnswerShown(data);
+        }
+    }
+
     private void updateQuestion() {
         int question = mQuestionsBank[mCurrentIndex].getTextResId();
         mQuestionTextView.setText(question);
@@ -180,8 +214,8 @@ public class QuizActivity extends AppCompatActivity {
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
         if ((mCorrectAnswers + mIncorrectAnswers) == mQuestionsBank.length) {
             double percentscore = ((double)mCorrectAnswers/(double)mQuestionsBank.length) * 100;
-            //mQuestionTextView.setText("Score: " + String.valueOf(percentscore) + "%");
-            Toast.makeText(this, getString(R.string.score, percentscore), Toast.LENGTH_LONG).show();
+            mQuestionTextView.setText("Score: " + String.valueOf(percentscore) + "%");
+            //Toast.makeText(this, getString(R.string.score, percentscore), Toast.LENGTH_LONG).show();
         }
     }
 }
